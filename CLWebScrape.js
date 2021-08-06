@@ -27,32 +27,31 @@ const executeLookup = async () => {
     var el = parser.parseFromString(text, "text/html");
 
     var results = el.getElementsByClassName("result-info");
-
-
-    // while (true){
-
-    //     exportedData.push(propValues);
-    //     if(true){
-    //         break
-    //     }
-    // }
-    var title = results[0].childNodes[5].textContent;
-    title = title.replace(/(\r\n|\n|\r|,|=)/gm, " ");
-    title = title.trim();
-
-    var link = results[0].childNodes[5].firstElementChild.href;
-    var postDate = results[0].childNodes[3].textContent;
-    var generalInfo = results[0].childNodes[7].textContent;
-    var generalValues = parseGeneralInfo(generalInfo);
-
-    propValues = [title, link, postDate]
-    propValues.push(...generalValues);
-    exportedData.push(propValues);
+    var ind = 0;
+    while (true){
+        var title = results[ind].childNodes[5].textContent;
+        title = title.replace(/(\r\n|\n|\r|,|=)/gm, " ");
+        title = title.trim();
+        var link = results[ind].childNodes[5].firstElementChild.href;
+        var postDate = results[ind].childNodes[3].textContent;
+        var generalInfo = results[ind].childNodes[7].textContent;
+        var generalValues = parseGeneralInfo(generalInfo);
+        propValues = [title, link, postDate]
+        propValues.push(...generalValues);
+        exportedData.push(propValues);
+        ind++
+        if(ind == results.length){
+            break
+        }
+    }
+    exportToCsv(exportedData);
 
 };
 
-function parseGeneralInfo(generalInfo){
+parseGeneralInfo = function (generalInfo){
     var rent = generalInfo.slice(generalInfo.indexOf("$"),generalInfo.indexOf("$")+6);
+    var rent = rent.replace(",","");
+
     var brCount = generalInfo.slice(generalInfo.indexOf("br")-2,generalInfo.indexOf("br"));
     var sqft = generalInfo.slice(generalInfo.indexOf("ft2")-4,generalInfo.indexOf("ft2"));
     var address = generalInfo.slice(generalInfo.indexOf("(")+1,generalInfo.indexOf(")"));
@@ -60,7 +59,23 @@ function parseGeneralInfo(generalInfo){
 
     generalValues = [rent,brCount, sqft, address];
     return generalValues;
+
 }
 
+exportToCsv = function (ExportedData) {
+    var fileName = ("CL.csv");
+    var CsvString = "";
+    ExportedData.forEach(function (RowItem, RowIndex) {
+        RowItem.forEach(function (ColItem, ColIndex) {
+            CsvString += ColItem + ',';
+        });
+        CsvString += "\r\n";
+    });
+    CsvString = "data:application/csv," + encodeURIComponent(CsvString);
+    var x = document.createElement("A");
+    x.setAttribute("href", CsvString);
+    x.setAttribute("download", fileName);
+    document.body.appendChild(x);
+    x.click();
+}
 var ignore = await executeLookup();
-console.log(exportedData);
