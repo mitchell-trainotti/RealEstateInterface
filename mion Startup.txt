@@ -1,0 +1,1 @@
+minio server --address "127.0.0.1:443" --certs-dir /etc/minio/certs /mnt/disk{1...4}/data
